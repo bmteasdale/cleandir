@@ -1,0 +1,129 @@
+#!/bin/zsh
+# This program was written by : Brendan Teasdale
+# Programming Assign 2
+# Operating Systems - CSci 375
+# Prof. Iker GondraT
+
+
+directory_path=$1 # First parameter passed in
+number_days=$2 #Second parameter passed in
+
+#if the second parameter is null (not all parameters were given)
+if [ -z "$number_days" ]
+then
+    echo "/////////////////////////////////////////////////////////////////////////////////////
+
+USAGE: cleandir *directory* *days*
+*directory*: pathname of directory to clean up
+*days*: number of days ago that a file in *directory* had to be modified in order
+for the file to be an old file
+
+DESCRIPTION:
+Files in *directory* that were modified more than *days* ago are removed, moved to
+directory mm-dd-yy (today's date), or unchanged, according to user's menu selection(s)
+
+/////////////////////////////////////////////////////////////////////////////////////
+"
+exit
+fi
+
+
+#count of files in directory
+#WARNING: folders within current directory are also included in file count.
+numFiles=`ls $directory_path | wc -l`
+
+#Array initialized with all file names.
+fileArray=(`find $directory_path -mtime +$number_days`)
+
+#Prints out the array containing all 'oldfiles' in the given directory
+echo "Files in $directory_path : $fileArray"
+
+select MENUCHOICE in "REMOVE" "MOVE" "ASK ME" "QUIT"
+do
+    case $MENUCHOICE in
+        "REMOVE")
+            for file in $fileArray
+            do
+                if [ $file != "$directory_path/cleandir" ]
+                then
+                    `rm $file`
+                fi
+            done
+            break
+            ;;
+
+        "MOVE")
+            # if the array of files is not empty..
+            if ! [ ${#fileArray[@]} -eq 0 ]
+            then
+                newFolder=`date "+%Y-%m-%d"`
+                `mkdir $directory_path/$newFolder/`
+                for file in $fileArray
+                do
+                    `mv $file $directory_path/$newFolder`
+                done
+                echo "Success: Files moved to folder '`date "+%Y-%m-%d"`'"
+            else
+                echo "Error: No  Files to move.."
+            fi
+
+            #User returned to main menu at this point
+            echo "\nMain Menu:"
+            echo "1) REMOVE\n2) MOVE\n3) ASK ME\n4) QUIT"
+            ;;
+
+        "QUIT")
+            echo "Exiting Program .."
+            exit
+            ;;
+        "ASK ME")
+            echo "\nASK ME WAS CALLED"
+            for file in $fileArray
+            do
+                echo "File: $file\n"
+                select CHOICE in "View File" "Remove File" "Move File" "Next File" "Quit"
+                do
+                    case $CHOICE in
+                        "View File")
+                            echo
+                            cat $file
+                            echo
+                            ;;
+                        "Remove File")
+                            `rm $file`
+                            echo "Success: $file removed!"
+                            break
+                            ;;
+                        "Move File")
+                            echo "Move File called"
+                            newFolder=`date "+%Y-%m-%d"`
+                            `mkdir $directory_path/$newFolder/`
+                            `mv $file $directory_path/$newFolder`
+                            break
+                            ;;
+                        "Next File")
+                            echo "\nNext file called"
+                            break
+                            ;;
+                        "Quit")
+                            echo "Exiting program .."
+                            exit
+                            ;;
+                        *)
+                            echo "$REPLY is an Invalid Choice"
+                            ;;
+                    esac
+                done
+            done
+
+            #Shown after user runs out of files to loop thorugh.
+            echo "Warning: Program returned to the main menu. No more files.."
+            echo "1) REMOVE\n2) MOVE\n3) ASK ME\n4) QUIT"
+            ;;
+
+        # if choice does not exist (* --> 'all other input')
+        *)
+            echo "$REPLY is an Invalid Choice, Please try again."
+            ;;
+    esac
+done
