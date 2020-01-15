@@ -2,7 +2,7 @@
 # This program was written by : Brendan Teasdale
 # Programming Assign 2
 # Operating Systems - CSci 375
-# Prof. Iker GondraT
+# Prof. Iker Gondra
 
 
 directory_path=$1 # First parameter passed in
